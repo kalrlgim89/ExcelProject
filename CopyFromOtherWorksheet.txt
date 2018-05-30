@@ -1,0 +1,45 @@
+Option Explicit
+
+Private Sub Workbook_Open()
+    Call ReadDataFromCloseFile
+End Sub
+
+Sub ReadDataFromCloseFile()
+    On Error GoTo ErrHandler
+    Application.ScreenUpdating = False
+    
+    Dim src, wsMaster As Workbook
+    
+    ' OPEN THE SOURCE EXCEL WORKBOOK IN "READ ONLY MODE".
+    Dim sParentFolder, strTargetFile As Variant
+    sParentFolder = Left(ThisWorkbook.Path, InStrRev(ThisWorkbook.Path, "\") - 1)
+    strTargetFile = sParentFolder & "\ReportTimeTracking\WeeklyCalendar\ReportTimeTracking_DOMINIK AMBOS_CW18.xlsx"
+    
+    Set src = Workbooks.Open(strTargetFile, True, True)
+    
+    ' GET THE TOTAL ROWS FROM THE SOURCE WORKBOOK.
+    Dim startingRow, iTotalRows As Integer
+    startingRow = 5
+    iTotalRows = src.Worksheets("Overview").Range(("E" & startingRow) & Cells(Rows.Count, "E").End(xlUp).Row).Rows.Count
+    iTotalRows = iTotalRows + startingRow
+   
+    ' COPY DATA FROM SOURCE (CLOSE WORKGROUP) TO THE DESTINATION WORKBOOK.
+    Dim iCnt As Integer         ' COUNTER.
+    
+    For iCnt = startingRow To iTotalRows
+        
+        Dim thisCell, toCopyCell As Double
+        thisCell = CDbl(ThisWorkbook.Worksheets("FirstDraft").Range("E" & iCnt).Formula)
+        toCopyCell = CDbl(Replace(src.Worksheets("Overview").Range("E" & iCnt).Formula, ".", ","))
+        ThisWorkbook.Worksheets("FirstDraft").Range("E" & iCnt).Formula = thisCell + toCopyCell
+        
+    Next iCnt
+    ' CLOSE THE SOURCE FILE.
+    src.Close False             ' FALSE - DON'T SAVE THE SOURCE FILE.
+    Set src = Nothing
+    
+ErrHandler:
+    Application.EnableEvents = True
+    Application.ScreenUpdating = True
+End Sub
+
